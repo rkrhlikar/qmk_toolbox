@@ -12,6 +12,6 @@ include_directories(${GTKMM_INCLUDE_DIRS})
 
 include_directories(include)
 
-add_executable(qmk_toolbox src/main.cpp src/main_window.cpp)
+add_executable(qmk_toolbox src/main.cpp src/main_window.cpp src/local_file_box.cpp)
 
 target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES})
