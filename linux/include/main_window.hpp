@@ -1,6 +1,11 @@
 #pragma once
 
-#include <gtkmm.h>
+#include <gtkmm/window.h>
+
+namespace Gtk
+{
+    class Builder;
+} // namespace Gtk
 
 namespace qmk
 {

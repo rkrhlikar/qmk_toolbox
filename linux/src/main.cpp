@@ -1,4 +1,5 @@
-#include <gtkmm.h>
+#include <gtkmm/application.h>
+#include <gtkmm/builder.h>
 
 #include "main_window.hpp"
 
