@@ -6,7 +6,7 @@ namespace Gtk
 {
     class Builder;
     class Button;
-    class ComboBox;
+    class ComboBoxText;
 } // namespace Gtk
 
 namespace qmk
@@ -22,7 +22,7 @@ namespace qmk
         void OnButtonOpen_();
 
         Gtk::Button* openButton_;
-        Gtk::ComboBox* localFileComboBox_;
+        Gtk::ComboBoxText* localFileComboBox_;
     };
 
 } // namespace qmk
