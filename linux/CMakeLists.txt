@@ -15,6 +15,10 @@ include_directories(${XMLPP_INCLUDE_DIRS})
 
 include_directories(include)
 
-add_executable(qmk_toolbox src/main.cpp src/main_window.cpp src/local_file_box.cpp src/user_configuration.cpp)
+add_executable(qmk_toolbox src/main.cpp
+               src/main_window.cpp
+               src/local_file_box.cpp
+               src/remote_file_grid.cpp
+               src/user_configuration.cpp)
 
 target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES} ${XMLPP_LIBRARIES} stdc++fs)

@@ -13,6 +13,7 @@ namespace qmk
 {
 
     class LocalFileBox;
+    class RemoteFileGrid;
 
     class MainWindow : public Gtk::Window
     {
@@ -26,6 +27,7 @@ namespace qmk
         bool OnExit_(GdkEventAny*);
 
         LocalFileBox* localFileBox_;
+        RemoteFileGrid* remoteFileGrid_;
 
         std::unique_ptr<UserConfiguration> userConfig_;
     };

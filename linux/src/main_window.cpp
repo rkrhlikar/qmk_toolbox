@@ -6,16 +6,19 @@
 #include <gtkmm/builder.h>
 
 #include "local_file_box.hpp"
+#include "remote_file_grid.hpp"
 
 namespace qmk
 {
 
     MainWindow::MainWindow(BaseObjectType *object, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(object),
-                                                                                                localFileBox_(nullptr)
+                                                                                                localFileBox_(nullptr),
+                                                                                                remoteFileGrid_(nullptr)
     {
         this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::OnExit_));
 
         builder->get_widget_derived("box4", localFileBox_);
+        builder->get_widget_derived("grid2", remoteFileGrid_);
     }
 
     MainWindow::~MainWindow() {}
