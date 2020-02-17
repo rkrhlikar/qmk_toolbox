@@ -66,4 +66,17 @@ namespace qmk
         }
     }
 
+    void LocalFileBox::Initialize(UserConfiguration* userConfig)
+    {
+        userConfig_ = userConfig;
+        const std::vector<std::string>& localFileList = userConfig_->GetLocalFileList();
+
+        for(const std::string& filename : localFileList)
+        {
+            localFileComboBox_->append(filename);
+        }
+        
+        localFileComboBox_->set_active(0);
+    }
+
 } // namespace qmk

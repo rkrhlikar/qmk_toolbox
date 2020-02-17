@@ -11,5 +11,11 @@ int main(int argc, char** argv)
     qmk::MainWindow* pMainWindow;
     builder->get_widget_derived("main", pMainWindow);
 
-    return app->run(*pMainWindow);
+    if(pMainWindow)
+    {
+        pMainWindow->Initialize();
+        return app->run(*pMainWindow); 
+    }
+
+    return -1;
 }
