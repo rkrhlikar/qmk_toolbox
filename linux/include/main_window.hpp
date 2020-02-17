@@ -23,9 +23,11 @@ namespace qmk
         void Initialize();
 
     protected:
+        bool OnExit_(GdkEventAny*);
+
         LocalFileBox* localFileBox_;
 
-        UserConfiguration userConfig_;
+        std::unique_ptr<UserConfiguration> userConfig_;
     };
 
 } // namespace qmk

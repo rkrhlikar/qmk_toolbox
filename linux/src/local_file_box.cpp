@@ -57,6 +57,19 @@ namespace qmk
                 std::string filename = dialog.get_filename();
                 localFileComboBox_->prepend(filename);
                 localFileComboBox_->set_active(0);
+
+                // Update configuration files list
+                std::vector<std::string> currentFileList;
+                auto treeModel = localFileComboBox_->get_model();
+                for(auto child : treeModel->children())
+                {
+                    Glib::ustring value;
+                    (*child).get_value(0, value);
+                    currentFileList.push_back(value);
+                }
+
+                userConfig_->SetLocalFileList(std::move(currentFileList));
+
                 break;
             }
             case(Gtk::RESPONSE_CANCEL):

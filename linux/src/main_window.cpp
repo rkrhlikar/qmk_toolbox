@@ -13,6 +13,8 @@ namespace qmk
     MainWindow::MainWindow(BaseObjectType *object, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(object),
                                                                                                 localFileBox_(nullptr)
     {
+        this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::OnExit_));
+
         builder->get_widget_derived("box4", localFileBox_);
     }
 
@@ -30,9 +32,15 @@ namespace qmk
             fs::create_directory(confDir);
         }
 
-        userConfig_ = UserConfiguration(confDir);
+        userConfig_ = std::make_unique<UserConfiguration>(confDir);
 
-        localFileBox_->Initialize(&userConfig_);
+        localFileBox_->Initialize(userConfig_.get());
+    }
+
+    bool MainWindow::OnExit_(GdkEventAny*)
+    {
+        userConfig_.reset(nullptr);
+        return false;
     }
 
 } // namespace qmk

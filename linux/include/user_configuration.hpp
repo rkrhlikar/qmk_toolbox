@@ -9,11 +9,11 @@ namespace qmk
     class UserConfiguration
     {
     public:
-        UserConfiguration();
         UserConfiguration(const std::string& configDir);
         ~UserConfiguration();
         
         const std::vector<std::string>& GetLocalFileList() const;
+        void SetLocalFileList(std::vector<std::string>&& localFileList);
 
     private:
         std::string filePath_;
