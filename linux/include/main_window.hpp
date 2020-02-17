@@ -21,8 +21,6 @@ namespace qmk
         MainWindow(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder);
         virtual ~MainWindow();
 
-        void Initialize();
-
     protected:
         bool OnExit_(GdkEventAny*);
 

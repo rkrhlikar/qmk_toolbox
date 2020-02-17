@@ -13,7 +13,6 @@ int main(int argc, char** argv)
 
     if(pMainWindow)
     {
-        pMainWindow->Initialize();
         return app->run(*pMainWindow); 
     }
 

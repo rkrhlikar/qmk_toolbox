@@ -19,12 +19,8 @@ namespace qmk
 
         builder->get_widget_derived("box4", localFileBox_);
         builder->get_widget_derived("grid2", remoteFileGrid_);
-    }
 
-    MainWindow::~MainWindow() {}
-
-    void MainWindow::Initialize()
-    {
+        // Application initialization
         namespace fs = std::experimental::filesystem;
 
         std::string confDir = std::string(std::getenv("HOME")) + "/.config/qmk_toolkit";
@@ -39,6 +35,8 @@ namespace qmk
 
         localFileBox_->Initialize(userConfig_.get());
     }
+
+    MainWindow::~MainWindow() {}
 
     bool MainWindow::OnExit_(GdkEventAny*)
     {
