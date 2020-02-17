@@ -22,6 +22,8 @@ namespace qmk
 
         void Initialize(UserConfiguration* userConfig);
 
+        void AddEntry(const std::string& filePath);
+
     protected:
         void OnButtonOpen_();
 
