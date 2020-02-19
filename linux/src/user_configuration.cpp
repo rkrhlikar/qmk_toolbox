@@ -4,14 +4,20 @@
 
 #include <libxml++/libxml++.h>
 
+#include "local_file_box.hpp"
+
 namespace qmk
 {
 
-    UserConfiguration::UserConfiguration(const std::string& configDir)
+    UserConfiguration::UserConfiguration(const std::string& configDir, LocalFileBox* localFileBox)
     {
         namespace fs = std::experimental::filesystem;
+        
+        localFileBox_ = localFileBox;
 
         filePath_ = configDir + "/user.config";
+
+        std::string activeLocalFile = "";
 
         if(fs::exists(filePath_))
         {
@@ -31,8 +37,8 @@ namespace qmk
                 if(name == "hexFileSetting")
                 {
                     xmlpp::TextNode* filePathNode = dynamic_cast<xmlpp::TextNode*>(valueNode->get_first_child("text"));
-                    std::string filePath = filePathNode->get_content();
-                    hexFileCollection_.insert(hexFileCollection_.begin(), filePath);
+                    // Store active local file to prepend it last
+                    activeLocalFile = filePathNode->get_content();
                 }
                 else if(name == "hexFileCollection")
                 {
@@ -41,11 +47,13 @@ namespace qmk
                     {
                         xmlpp::TextNode* filePathNode = dynamic_cast<xmlpp::TextNode*>(collectionNode->get_first_child("text"));
                         std::string filePath = filePathNode->get_content();
-                        hexFileCollection_.push_back(filePath);
+                        localFileBox_->AddEntry(filePath);
                     }
                 }
             }
         }
+
+        if(activeLocalFile != "") localFileBox_->AddEntry(activeLocalFile);
     }
 
     UserConfiguration::~UserConfiguration()
@@ -57,20 +65,23 @@ namespace qmk
         xmlpp::Element* userSettings = rootNode->add_child("userSettings");
         xmlpp::Element* properties = userSettings->add_child("QMK_Toolbox.Properties.Settings");
 
+        // Get local files list
+        std::vector<std::string> hexFileList = localFileBox_->GetLocalFilesList();
+
         // Write local files list
-        if(!hexFileCollection_.empty())
+        if(!hexFileList.empty())
         {
             // First write the last loaded selection as hexFileSetting
             xmlpp::Element* settingElement = properties->add_child("setting");
             settingElement->set_attribute("name", "hexFileSetting");
             settingElement->set_attribute("serializeAs", "String");
             xmlpp::Element* valueElement = settingElement->add_child("value");
-            std::vector<std::string>::const_iterator hexFileIt = hexFileCollection_.begin();
+            std::vector<std::string>::const_iterator hexFileIt = hexFileList.begin();
             valueElement->add_child_text(*hexFileIt);
 
             // Write the rest of the list under hexFileCollection
             hexFileIt++;
-            if(hexFileIt != hexFileCollection_.end())
+            if(hexFileIt != hexFileList.end())
             {
                 settingElement = properties->add_child("setting");
                 settingElement->set_attribute("name", "hexFileCollection");
@@ -79,7 +90,7 @@ namespace qmk
                 xmlpp::Element* arrayElement = valueElement->add_child("ArrayOfAnyType");
                 arrayElement->set_namespace_declaration("http://www.w3.org/2001/XMLSchema-instance", "xsi");
                 arrayElement->set_namespace_declaration("http://www.w3.org/2001/XMLSchema", "xsd");
-                for(; hexFileIt != hexFileCollection_.end(); hexFileIt++)
+                for(; hexFileIt != hexFileList.end(); hexFileIt++)
                 {
                     xmlpp::Element* arrayEntryElement = arrayElement->add_child("anyType");
                     arrayEntryElement->set_attribute("type", "xsd:string", "xsi");
@@ -89,16 +100,6 @@ namespace qmk
         }
 
         outputConfigDocument.write_to_file(filePath_, "utf-8");
-    }
-
-    const std::vector<std::string>& UserConfiguration::GetLocalFileList() const
-    {
-        return hexFileCollection_;
-    }
-
-    void UserConfiguration::SetLocalFileList(std::vector<std::string>&& localFileList)
-    {
-        hexFileCollection_ = std::move(localFileList);
     }
 
 } // namespace qmk

@@ -31,10 +31,9 @@ namespace qmk
             fs::create_directory(confDir);
         }
 
-        userConfig_ = std::make_unique<UserConfiguration>(confDir);
-
-        localFileBox_->Initialize(userConfig_.get());
         remoteFileGrid_->Initialize(localFileBox_);
+
+        userConfig_ = std::make_unique<UserConfiguration>(confDir, localFileBox_);
     }
 
     MainWindow::~MainWindow() {}

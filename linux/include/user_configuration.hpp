@@ -6,19 +6,17 @@
 namespace qmk
 {
 
+    class LocalFileBox;
+
     class UserConfiguration
     {
     public:
-        UserConfiguration(const std::string& configDir);
+        UserConfiguration(const std::string& configDir, LocalFileBox* localFileBox);
         ~UserConfiguration();
-        
-        const std::vector<std::string>& GetLocalFileList() const;
-        void SetLocalFileList(std::vector<std::string>&& localFileList);
 
     private:
+        LocalFileBox* localFileBox_;
         std::string filePath_;
-
-        std::vector<std::string> hexFileCollection_;
     };
 
 } // namespace qmk

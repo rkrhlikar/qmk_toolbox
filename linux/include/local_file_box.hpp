@@ -2,8 +2,6 @@
 
 #include <gtkmm/box.h>
 
-#include "user_configuration.hpp"
-
 namespace Gtk
 {
     class Builder;
@@ -20,17 +18,14 @@ namespace qmk
         LocalFileBox(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder);
         virtual ~LocalFileBox();
 
-        void Initialize(UserConfiguration* userConfig);
-
         void AddEntry(const std::string& filePath);
+        std::vector<std::string> GetLocalFilesList();
 
     protected:
         void OnButtonOpen_();
 
         Gtk::Button* openButton_;
         Gtk::ComboBoxText* localFileComboBox_;
-
-        UserConfiguration* userConfig_;
     };
 
 } // namespace qmk

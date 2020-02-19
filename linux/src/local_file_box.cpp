@@ -30,19 +30,21 @@ namespace qmk
     {
         localFileComboBox_->prepend(filePath);
         localFileComboBox_->set_active(0);
+    }
 
-        // Update configuration files list
-        std::vector<std::string> currentFileList;
+    std::vector<std::string> LocalFileBox::GetLocalFilesList()
+    {
+        std::vector<std::string> hexFileList;
         auto treeModel = localFileComboBox_->get_model();
         for(auto child : treeModel->children())
         {
             Glib::ustring value;
             (*child).get_value(0, value);
-            currentFileList.push_back(value);
+            hexFileList.push_back(value);
         }
 
-        userConfig_->SetLocalFileList(std::move(currentFileList));
-    }    
+        return hexFileList;
+    }
 
     void LocalFileBox::OnButtonOpen_()
     {
@@ -81,19 +83,6 @@ namespace qmk
             default:
                 break;
         }
-    }
-
-    void LocalFileBox::Initialize(UserConfiguration* userConfig)
-    {
-        userConfig_ = userConfig;
-        const std::vector<std::string>& localFileList = userConfig_->GetLocalFileList();
-
-        for(const std::string& filename : localFileList)
-        {
-            localFileComboBox_->append(filename);
-        }
-        
-        localFileComboBox_->set_active(0);
     }
 
 } // namespace qmk
