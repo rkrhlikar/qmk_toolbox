@@ -22,6 +22,11 @@ namespace qmk
         {
             openButton_->signal_clicked().connect(sigc::mem_fun(*this, &LocalFileBox::OnButtonOpen_));
         }
+
+        if(localFileComboBox_)
+        {
+            localFileComboBox_->signal_changed().connect(sigc::mem_fun(*this, &LocalFileBox::OnChangedFileSelection_));
+        }
     }
 
     LocalFileBox::~LocalFileBox() {}
@@ -83,6 +88,20 @@ namespace qmk
             default:
                 break;
         }
+    }
+
+    void LocalFileBox::OnChangedFileSelection_()
+    {
+        int activeIndex = localFileComboBox_->get_active_row_number();
+    
+        // If the top entry was activated, don't do anything
+        if(activeIndex <= 0) return;
+
+        // An old entry was activated, move it on top of list
+        Glib::ustring entry = localFileComboBox_->get_active_text();
+        localFileComboBox_->remove_text(activeIndex);
+        localFileComboBox_->prepend(entry);
+        localFileComboBox_->set_active(0);
     }
 
 } // namespace qmk

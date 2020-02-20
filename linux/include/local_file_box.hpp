@@ -23,6 +23,7 @@ namespace qmk
 
     protected:
         void OnButtonOpen_();
+        void OnChangedFileSelection_();
 
         Gtk::Button* openButton_;
         Gtk::ComboBoxText* localFileComboBox_;
