@@ -47,13 +47,13 @@ namespace qmk
                     {
                         xmlpp::TextNode* filePathNode = dynamic_cast<xmlpp::TextNode*>(collectionNode->get_first_child("text"));
                         std::string filePath = filePathNode->get_content();
-                        localFileBox_->AddEntry(filePath);
+                        localFileBox_->AppendEntry(filePath);
                     }
                 }
             }
         }
 
-        if(activeLocalFile != "") localFileBox_->AddEntry(activeLocalFile);
+        if(activeLocalFile != "") localFileBox_->AddActiveEntry(activeLocalFile);
     }
 
     UserConfiguration::~UserConfiguration()

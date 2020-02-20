@@ -106,7 +106,7 @@ namespace qmk
         std::ofstream fwFileStream(outputFile);
         fwFileStream << qmkFwReq;
         
-        localFileBox_->AddEntry(outputFile);
+        localFileBox_->AddActiveEntry(outputFile);
     }    
 
 } // namespace qmk

@@ -31,10 +31,15 @@ namespace qmk
 
     LocalFileBox::~LocalFileBox() {}
 
-    void LocalFileBox::AddEntry(const std::string& filePath)
+    void LocalFileBox::AddActiveEntry(const std::string& filePath)
     {
         localFileComboBox_->prepend(filePath);
         localFileComboBox_->set_active(0);
+    }
+    
+    void LocalFileBox::AppendEntry(const std::string& filePath)
+    {
+        localFileComboBox_->append(filePath);
     }
 
     std::vector<std::string> LocalFileBox::GetLocalFilesList()
@@ -79,7 +84,7 @@ namespace qmk
         {
             case(Gtk::RESPONSE_OK):
             {
-                AddEntry(dialog.get_filename());
+                AddActiveEntry(dialog.get_filename());
 
                 break;
             }

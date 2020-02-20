@@ -18,7 +18,8 @@ namespace qmk
         LocalFileBox(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder);
         virtual ~LocalFileBox();
 
-        void AddEntry(const std::string& filePath);
+        void AddActiveEntry(const std::string& filePath);
+        void AppendEntry(const std::string& filePath);
         std::vector<std::string> GetLocalFilesList();
 
     protected:
