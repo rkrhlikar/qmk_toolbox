@@ -25,6 +25,7 @@ namespace qmk
     protected:
         void OnButtonOpen_();
         void OnChangedFileSelection_();
+        int FindDuplicateEntry_(const std::string& filePath);
 
         Gtk::Button* openButton_;
         Gtk::ComboBoxText* localFileComboBox_;

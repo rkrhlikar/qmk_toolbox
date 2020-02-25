@@ -33,12 +33,27 @@ namespace qmk
 
     void LocalFileBox::AddActiveEntry(const std::string& filePath)
     {
+        int duplicateEntry = FindDuplicateEntry_(filePath);
+
+        if(duplicateEntry >= 0)
+        {
+            // Entry already exists, activate it
+            localFileComboBox_->set_active(duplicateEntry);
+            return;
+        }
+
         localFileComboBox_->prepend(filePath);
         localFileComboBox_->set_active(0);
     }
     
     void LocalFileBox::AppendEntry(const std::string& filePath)
     {
+        if(FindDuplicateEntry_(filePath) >= 0)
+        {
+            // Entry already exists, don't add duplicate
+            return;
+        }
+
         localFileComboBox_->append(filePath);
     }
 
@@ -107,6 +122,18 @@ namespace qmk
         localFileComboBox_->remove_text(activeIndex);
         localFileComboBox_->prepend(entry);
         localFileComboBox_->set_active(0);
+    }
+
+    int LocalFileBox::FindDuplicateEntry_(const std::string& filePath)
+    {
+        std::vector<std::string> filesList = GetLocalFilesList();
+
+        for(int i = 0; i < filesList.size(); i++)
+        {
+            if(filePath == filesList[i]) return i;
+        }
+
+        return -1;
     }
 
 } // namespace qmk
