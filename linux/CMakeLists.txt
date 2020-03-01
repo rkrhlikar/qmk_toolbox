@@ -19,6 +19,7 @@ add_executable(qmk_toolbox src/main.cpp
                            src/main_window.cpp
                            src/local_file_box.cpp
                            src/remote_file_grid.cpp
+                           src/console_text_view.cpp
                            src/user_configuration.cpp)
 
 target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES} ${XMLPP_LIBRARIES} curl curlpp stdc++fs)
