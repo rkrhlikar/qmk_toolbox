@@ -7,6 +7,7 @@
 
 #include "console_text_view.hpp"
 #include "local_file_box.hpp"
+#include "mcu_list_combo_box.hpp"
 #include "remote_file_grid.hpp"
 
 namespace qmk
@@ -15,13 +16,15 @@ namespace qmk
     MainWindow::MainWindow(BaseObjectType *object, const Glib::RefPtr<Gtk::Builder> &builder) : Gtk::Window(object),
                                                                                                 localFileBox_(nullptr),
                                                                                                 remoteFileGrid_(nullptr),
-                                                                                                consoleTextView_(nullptr)
+                                                                                                consoleTextView_(nullptr),
+                                                                                                mcuListComboBox_(nullptr)
     {
         this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::OnExit_));
 
         builder->get_widget_derived("box4", localFileBox_);
         builder->get_widget_derived("grid2", remoteFileGrid_);
         builder->get_widget_derived("output", consoleTextView_);
+        builder->get_widget_derived("microcontroller", mcuListComboBox_);
 
         // Application initialization
         namespace fs = std::experimental::filesystem;
@@ -36,7 +39,7 @@ namespace qmk
 
         remoteFileGrid_->Initialize(localFileBox_);
 
-        userConfig_ = std::make_unique<UserConfiguration>(confDir, localFileBox_);
+        userConfig_ = std::make_unique<UserConfiguration>(confDir, localFileBox_, mcuListComboBox_);
 
         consoleTextView_->Print("QMK Toolbox (https://qmk.fm/toolbox)", ConsoleTextView::MessageType::INFO);
         consoleTextView_->PrintResponse("Supported bootloaders:", ConsoleTextView::MessageType::INFO);

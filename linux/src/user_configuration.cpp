@@ -5,15 +5,17 @@
 #include <libxml++/libxml++.h>
 
 #include "local_file_box.hpp"
+#include "mcu_list_combo_box.hpp"
 
 namespace qmk
 {
 
-    UserConfiguration::UserConfiguration(const std::string& configDir, LocalFileBox* localFileBox)
+    UserConfiguration::UserConfiguration(const std::string& configDir, LocalFileBox* localFileBox, McuListComboBox* mcuListComboBox)
     {
         namespace fs = std::experimental::filesystem;
         
         localFileBox_ = localFileBox;
+        mcuListComboBox_ = mcuListComboBox;
 
         filePath_ = configDir + "/user.config";
 
@@ -49,6 +51,11 @@ namespace qmk
                         std::string filePath = filePathNode->get_content();
                         localFileBox_->AppendEntry(filePath);
                     }
+                }
+                else if(name == "targetSetting")
+                {
+                    xmlpp::TextNode* activeMcuNode = dynamic_cast<xmlpp::TextNode*>(valueNode->get_first_child("text"));
+                    mcuListComboBox_->SetActiveTextEntry(activeMcuNode->get_content());
                 }
             }
         }
@@ -98,6 +105,13 @@ namespace qmk
                 }
             }
         }
+
+        // Write active target setting
+        xmlpp::Element* settingElement = properties->add_child("setting");
+        settingElement->set_attribute("name", "targetSetting");
+        settingElement->set_attribute("serializeAs", "String");
+        xmlpp::Element* valueElement = settingElement->add_child("value");
+        valueElement->add_child_text(mcuListComboBox_->GetActiveTextEntry());
 
         outputConfigDocument.write_to_file(filePath_, "utf-8");
     }
