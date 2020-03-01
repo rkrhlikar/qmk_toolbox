@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED true)
 
 project(qmk_toolbox)
 
+# Copy glade xml file and icon to binary directory
+configure_file(main.glade main.glade COPYONLY)
+configure_file(output.ico output.ico COPYONLY)
+
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 link_directories(${GTKMM_LIBRARY_DIRS})
