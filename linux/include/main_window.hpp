@@ -14,6 +14,7 @@ namespace qmk
 
     class LocalFileBox;
     class RemoteFileGrid;
+    class ConsoleTextView;
 
     class MainWindow : public Gtk::Window
     {
@@ -26,6 +27,7 @@ namespace qmk
 
         LocalFileBox* localFileBox_;
         RemoteFileGrid* remoteFileGrid_;
+        ConsoleTextView* consoleTextView_;
 
         std::unique_ptr<UserConfiguration> userConfig_;
     };
