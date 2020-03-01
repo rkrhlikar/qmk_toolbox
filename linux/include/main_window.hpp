@@ -3,6 +3,7 @@
 #include <gtkmm/window.h>
 
 #include "user_configuration.hpp"
+#include "device_handler.hpp"
 
 namespace Gtk
 {
@@ -32,6 +33,8 @@ namespace qmk
         McuListComboBox* mcuListComboBox_;
 
         std::unique_ptr<UserConfiguration> userConfig_;
+
+        DeviceHandler deviceHandler_;
     };
 
 } // namespace qmk

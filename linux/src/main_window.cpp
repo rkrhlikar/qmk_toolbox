@@ -53,6 +53,8 @@ namespace qmk
         consoleTextView_->PrintResponse(" - USBTiny (AVR Pocket)", ConsoleTextView::MessageType::INFO);
         consoleTextView_->PrintResponse(" - AVRISP (Arduino ISP)", ConsoleTextView::MessageType::INFO);
         consoleTextView_->PrintResponse(" - USBasp (AVR ISP)", ConsoleTextView::MessageType::INFO);
+
+        deviceHandler_.Initialize(consoleTextView_);
     }
 
     MainWindow::~MainWindow() {}
