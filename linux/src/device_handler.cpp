@@ -6,6 +6,7 @@
 #include <string>
 
 #include <sys/time.h>
+#include <libudev.h>
 #include <libusb-1.0/libusb.h>
 
 #include "console_text_view.hpp"
@@ -19,7 +20,61 @@ namespace qmk
         uint16_t productId;
         std::string manufacturerName;
         std::string productName;
+        std::string port = "";
     };
+
+    static void GetDevicePort(Device& device)
+    {   
+        std::stringstream vendorIdStringStream;
+        vendorIdStringStream << std::setfill('0') << std::setw(4) << std::hex << device.vendorId;
+        std::stringstream productIdStringStream;
+        productIdStringStream << std::setfill('0') << std::setw(4) << std::hex << device.productId;
+
+        std::string vendorIdString = vendorIdStringStream.str();
+        std::string productIdString = productIdStringStream.str();
+
+        struct udev* udevCtx = udev_new();
+
+        struct udev_enumerate* enumerate = udev_enumerate_new(udevCtx);
+
+        udev_enumerate_add_match_subsystem(enumerate, "tty");
+        udev_enumerate_scan_devices(enumerate);
+
+        struct udev_list_entry* devices = udev_enumerate_get_list_entry(enumerate);
+        struct udev_list_entry* entry;
+
+        udev_list_entry_foreach(entry, devices)
+        {
+            const char* path = udev_list_entry_get_name(entry);
+            struct udev_device* udevDevice = udev_device_new_from_syspath(udevCtx, path);
+
+            if(udevDevice)
+            {
+                const char* devNode = udev_device_get_devnode(udevDevice);
+                if(devNode)
+                {
+                    const char* vendor = udev_device_get_property_value(udevDevice, "ID_VENDOR_ID");
+                    if (! vendor)
+                        vendor = "0000";
+
+                    const char* product = udev_device_get_property_value(udevDevice, "ID_MODEL_ID");
+                    if (! product)
+                        product = "0000";
+
+                    if(std::string(vendor) == vendorIdString && std::string(product) == productIdString)
+                    {
+                        device.port = devNode;
+                    }
+                }
+
+                udev_device_unref(udevDevice);
+            }
+        }
+
+        udev_enumerate_unref(enumerate);
+
+        udev_unref(udevCtx);
+    }
 
     static int HotplugEventTrampoline(struct libusb_context *context,
                                       struct libusb_device *device,
@@ -117,6 +172,7 @@ namespace qmk
                     {
                         // SAM-BA
                         deviceName = "Atmel SAM-BA";
+                        if(connected) GetDevicePort(device);
                         break;
                     }
                     default:
@@ -132,18 +188,21 @@ namespace qmk
             {
                 // Arduino
                 deviceName = "Caterina";
+                if(connected) GetDevicePort(device);
                 break;
             }
             case 0x1B4F:
             {
                 // Sparkfun
                 deviceName = "Caterina";
+                if(connected) GetDevicePort(device);
                 break;
             }
             case 0x239A:
             {
                 // Adafruit
                 deviceName = "Caterina";
+                if(connected) GetDevicePort(device);
                 break;
             }
             case 0x16C0:
@@ -154,12 +213,14 @@ namespace qmk
                     {
                         // Arduino ISP
                         deviceName = "AVRISP";
+                        if(connected) GetDevicePort(device);
                         break;
                     }
                     case 0x05DC:
                     {
                         // AVR USBAsp
                         deviceName = "USBAsp";
+                        if(connected) GetDevicePort(device);
                         break;
                     }
                     case 0x05DF:
@@ -213,6 +274,7 @@ namespace qmk
                 {
                     // AVR Pocket ISP
                     deviceName = "USB Tiny";
+                    if(connected) GetDevicePort(device);
                     break;
                 }
 
