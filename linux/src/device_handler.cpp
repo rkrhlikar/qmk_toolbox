@@ -291,17 +291,30 @@ namespace qmk
                                     }
                                 }
                             }
+
+                            {
+                                std::lock_guard<std::mutex> lock(devicesMapLock_);
+                                devicesMap_[sysPath] = device;
+                            }
                         }
                         else if(action == "remove")
                         {
-                            continue;
+                            auto deviceIt = devicesMap_.find(sysPath);
+                            if(deviceIt == devicesMap_.end()) continue;
+
+                            device = deviceIt->second;
+                            
+                            {
+                                std::lock_guard<std::mutex> lock(devicesMapLock_);
+                                devicesMap_.erase(deviceIt);
+                            }
                         }
                         else
                         {
+                            // Other events
                             continue;
                         }
                         
-
                         std::stringstream message;
                         message << device.deviceName << " device " << ((action == "add") ? "connected":"disconnected") << " ";
                         message << device.manufacturerName << " "<< device.productName;

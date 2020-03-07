@@ -1,6 +1,8 @@
 #pragma once
 
 #include <atomic>
+#include <map>
+#include <mutex>
 #include <thread>
 
 namespace qmk
@@ -31,6 +33,9 @@ namespace qmk
 
         std::atomic<bool> stop_;
         std::thread udevThread_;
+
+        std::mutex devicesMapLock_;
+        std::map<std::string, Device> devicesMap_;
     };
 
 } // namespace qmk
