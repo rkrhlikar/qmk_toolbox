@@ -1,6 +1,7 @@
 #include "device_handler.hpp"
 
-#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -366,6 +367,98 @@ namespace qmk
     {
         stop_ = true;
         udevThread_.join();
+    }
+
+    void DeviceHandler::FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath)
+    {
+        if(flashingThread_.joinable()) flashingThread_.join();
+
+        flashingThread_ = std::thread([this, microcontroller, filePath]() {
+            std::lock_guard<std::mutex> devicesLock(devicesMapLock_);
+
+            for(const std::pair<std::string, Device>& devicePair : devicesMap_)
+            {
+                const Device& device = std::get<1>(devicePair);
+
+                switch(device.chipset)
+                {
+                    case Device::Chipset::DFU:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::HALFKAY:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::CATERINA:
+                    {
+                        std::string args = "-C avrdude.conf -p " + microcontroller + " -c avr109 -U flash:w:\"" + filePath + "\":i -P " + device.devPath;
+                        consoleTextView_->Print("avrdude " + args, ConsoleTextView::MessageType::COMMAND);
+
+                        std::array<char, 256> buffer;
+                        std::stringstream outputStream;
+
+                        std::string command = "./avrdude " + args + " 2>&1";
+
+                        FILE* pipe = popen(command.c_str(), "r");
+                        if(!pipe) throw std::runtime_error("Failed to run command");
+
+                        while(fgets(buffer.data(), buffer.size(), pipe) != NULL)
+                        {
+                            outputStream << buffer.data();
+                            std::string line;
+                            std::getline(outputStream, line);
+                            if(line != "")
+                            {
+                                line += "\n";
+                                consoleTextView_->PrintResponse(line, ConsoleTextView::MessageType::INFO);
+                                
+                                if (line.find("Bootloader and code overlap.") != std::string::npos || // DFU
+                                    line.find("exceeds remaining flash size!") != std::string::npos || // BootloadHID
+                                    line.find("Not enough bytes in device info report") != std::string::npos) // BootloadHID
+                                {
+                                    consoleTextView_->Print("File is too large for device", ConsoleTextView::MessageType::ERROR);
+                                }
+                            }
+                        }
+
+                        pclose(pipe);
+
+                        break;
+                    }
+                    case Device::Chipset::STM32:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::KIIBOHD:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::AVR_ISP:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::USB_ASP:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::USB_TINY:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::BOOTLOAD_HID:
+                    {
+                        break;
+                    }
+                    case Device::Chipset::ATMEL_SAM_BA:
+                    {
+                        break;
+                    }
+                    default:
+                        throw std::runtime_error("Unknown chipset");
+                }
+            }
+        });
     }
 
 } // namespace qmk

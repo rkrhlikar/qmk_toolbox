@@ -42,6 +42,8 @@ namespace qmk
 
         void Initialize(ConsoleTextView* consoleTextView);
 
+        void FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath);
+
     private:
         ConsoleTextView* consoleTextView_;
 
@@ -50,6 +52,8 @@ namespace qmk
 
         std::mutex devicesMapLock_;
         std::map<std::string, Device> devicesMap_;
+
+        std::thread flashingThread_;
     };
 
 } // namespace qmk
