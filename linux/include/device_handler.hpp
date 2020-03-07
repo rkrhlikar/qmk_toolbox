@@ -7,7 +7,6 @@ namespace qmk
 {
 
     class ConsoleTextView;
-    struct Device;
 
     class DeviceHandler
     {
@@ -17,14 +16,11 @@ namespace qmk
 
         void Initialize(ConsoleTextView* consoleTextView);
 
-        void DeviceEventHandler(Device&& device, bool connected);
-
     private:
         ConsoleTextView* consoleTextView_;
-        int callbackHandle_;
 
         std::atomic<bool> stop_;
-        std::thread usbThread_;
+        std::thread udevThread_;
     };
 
 } // namespace qmk

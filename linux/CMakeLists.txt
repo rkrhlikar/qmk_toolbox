@@ -36,6 +36,5 @@ target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES}
                                   curl
                                   curlpp
                                   stdc++fs
-                                  usb-1.0
                                   udev
                                   pthread)
