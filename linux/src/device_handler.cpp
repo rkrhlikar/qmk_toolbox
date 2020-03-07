@@ -37,6 +37,35 @@ namespace qmk
         struct udev_device* device_;
     };
 
+    static std::string ChipsetToString(Device::Chipset chipset)
+    {
+        switch(chipset)
+        {
+            case Device::Chipset::DFU:
+                return "DFU";
+            case Device::Chipset::HALFKAY:
+                return "Halfkay";
+            case Device::Chipset::CATERINA:
+                return "Caterina";
+            case Device::Chipset::STM32:
+                return "STM32";
+            case Device::Chipset::KIIBOHD:
+                return "Kiibohd";
+            case Device::Chipset::AVR_ISP:
+                return "AVRISP";
+            case Device::Chipset::USB_ASP:
+                return "USBAsp";
+            case Device::Chipset::USB_TINY:
+                return "USB Tiny";
+            case Device::Chipset::BOOTLOAD_HID:
+                return "BootloadHID";
+            case Device::Chipset::ATMEL_SAM_BA:
+                return "Atmel SAM-BA";
+            default:
+                throw std::runtime_error("Unknown chipset");
+        }
+    }
+
     DeviceHandler::DeviceHandler() {}
 
     void DeviceHandler::Initialize(ConsoleTextView* consoleTextView)
@@ -110,7 +139,7 @@ namespace qmk
                                     case 0x03EB:
                                     {
                                         // Atmel - DFU
-                                        device.deviceName = "DFU";
+                                        device.chipset = Device::Chipset::DFU;
                                         break;
                                     }
                                     case 0x16C0:
@@ -120,13 +149,13 @@ namespace qmk
                                             case 0x05DF:
                                             {
                                                 // Objective Development
-                                                device.deviceName = "BootloadHID";
+                                                device.chipset = Device::Chipset::BOOTLOAD_HID;
                                                 break;
                                             }
                                             case 0x0478:
                                             {
                                                 // PJRC
-                                                device.deviceName = "Halfkay";
+                                                device.chipset = Device::Chipset::HALFKAY;
                                                 break;
                                             }
                                             default:
@@ -145,7 +174,7 @@ namespace qmk
                                             case 0xDF11:
                                             {
                                                 // STM32
-                                                device.deviceName = "STM32";
+                                                device.chipset = Device::Chipset::STM32;
                                                 break;
                                             }
                                             default:
@@ -164,7 +193,7 @@ namespace qmk
                                             case 0xB007:
                                             {
                                                 // Kiibohd
-                                                device.deviceName = "Kiibohd";
+                                                device.chipset = Device::Chipset::KIIBOHD;
                                             }
                                             default:
                                             {
@@ -210,7 +239,7 @@ namespace qmk
                                             case 0x6124:
                                             {
                                                 // SAM-BA
-                                                device.deviceName = "Atmel SAM-BA";
+                                                device.chipset = Device::Chipset::ATMEL_SAM_BA;
                                                 break;
                                             }
                                             default:
@@ -225,19 +254,19 @@ namespace qmk
                                     case 0x2341:
                                     {
                                         // Arduino
-                                        device.deviceName = "Caterina";
+                                        device.chipset = Device::Chipset::CATERINA;
                                         break;
                                     }
                                     case 0x1B4F:
                                     {
                                         // Sparkfun
-                                        device.deviceName = "Caterina";
+                                        device.chipset = Device::Chipset::CATERINA;
                                         break;
                                     }
                                     case 0x239A:
                                     {
                                         // Adafruit
-                                        device.deviceName = "Caterina";
+                                        device.chipset = Device::Chipset::CATERINA;
                                         break;
                                     }
                                     case 0x16C0:
@@ -247,13 +276,13 @@ namespace qmk
                                             case 0x0483:
                                             {
                                                 // Arduino ISP
-                                                device.deviceName = "AVRISP";
+                                                device.chipset = Device::Chipset::AVR_ISP;
                                                 break;
                                             }
                                             case 0x05DC:
                                             {
                                                 // AVR USBAsp
-                                                device.deviceName = "USBAsp";
+                                                device.chipset = Device::Chipset::USB_ASP;
                                                 break;
                                             }
                                             default:
@@ -272,7 +301,7 @@ namespace qmk
                                             case 0x0C9F:
                                             {
                                                 // AVR Pocket ISP
-                                                device.deviceName = "USB Tiny";
+                                                device.chipset = Device::Chipset::USB_TINY;
                                                 break;
                                             }
                                             default:
@@ -303,7 +332,7 @@ namespace qmk
                             if(deviceIt == devicesMap_.end()) continue;
 
                             device = deviceIt->second;
-                            
+
                             {
                                 std::lock_guard<std::mutex> lock(devicesMapLock_);
                                 devicesMap_.erase(deviceIt);
@@ -316,7 +345,8 @@ namespace qmk
                         }
                         
                         std::stringstream message;
-                        message << device.deviceName << " device " << ((action == "add") ? "connected":"disconnected") << " ";
+                        message << ChipsetToString(device.chipset) << " device ";
+                        message << ((action == "add") ? "connected":"disconnected") << " ";
                         message << device.manufacturerName << " "<< device.productName;
                         message << " (" << device.vendorId << ":" << device.productId << ")";
                         if(device.devPath != "") message << " @ " << std::string(device.devPath);

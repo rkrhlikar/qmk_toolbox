@@ -12,12 +12,26 @@ namespace qmk
 
     struct Device
     {
-        std::string deviceName;
+        enum class Chipset
+        {
+            DFU,
+            HALFKAY,
+            CATERINA,
+            STM32,
+            KIIBOHD,
+            AVR_ISP,
+            USB_ASP,
+            USB_TINY,
+            BOOTLOAD_HID,
+            ATMEL_SAM_BA
+        };
+
         std::string vendorId;
         std::string productId;
         std::string manufacturerName;
         std::string productName;
         std::string devPath = "";
+        Chipset chipset;
     };
 
     class DeviceHandler
