@@ -29,7 +29,8 @@ add_executable(qmk_toolbox src/main.cpp
                            src/console_text_view.cpp
                            src/mcu_list_combo_box.cpp
                            src/user_configuration.cpp
-                           src/device_handler.cpp)
+                           src/device_handler.cpp
+                           src/flashing_box.cpp)
 
 target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES}
                                   ${XMLPP_LIBRARIES}

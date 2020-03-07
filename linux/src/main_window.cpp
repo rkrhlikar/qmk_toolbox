@@ -9,6 +9,7 @@
 #include "local_file_box.hpp"
 #include "mcu_list_combo_box.hpp"
 #include "remote_file_grid.hpp"
+#include "flashing_box.hpp"
 
 namespace qmk
 {
@@ -17,7 +18,8 @@ namespace qmk
                                                                                                 localFileBox_(nullptr),
                                                                                                 remoteFileGrid_(nullptr),
                                                                                                 consoleTextView_(nullptr),
-                                                                                                mcuListComboBox_(nullptr)
+                                                                                                mcuListComboBox_(nullptr),
+                                                                                                flashingBox_(nullptr)
     {
         this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::OnExit_));
 
@@ -25,6 +27,7 @@ namespace qmk
         builder->get_widget_derived("grid2", remoteFileGrid_);
         builder->get_widget_derived("output", consoleTextView_);
         builder->get_widget_derived("microcontroller", mcuListComboBox_);
+        builder->get_widget_derived("box7", flashingBox_);
 
         // Application initialization
         namespace fs = std::experimental::filesystem;
@@ -54,7 +57,7 @@ namespace qmk
         consoleTextView_->PrintResponse(" - AVRISP (Arduino ISP)", ConsoleTextView::MessageType::INFO);
         consoleTextView_->PrintResponse(" - USBasp (AVR ISP)", ConsoleTextView::MessageType::INFO);
 
-        deviceHandler_.Initialize(consoleTextView_);
+        flashingBox_->Initialize(consoleTextView_, localFileBox_, mcuListComboBox_);
     }
 
     MainWindow::~MainWindow() {}

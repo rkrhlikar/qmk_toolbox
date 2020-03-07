@@ -3,7 +3,6 @@
 #include <gtkmm/window.h>
 
 #include "user_configuration.hpp"
-#include "device_handler.hpp"
 
 namespace Gtk
 {
@@ -17,6 +16,7 @@ namespace qmk
     class RemoteFileGrid;
     class ConsoleTextView;
     class McuListComboBox;
+    class FlashingBox;
 
     class MainWindow : public Gtk::Window
     {
@@ -31,10 +31,9 @@ namespace qmk
         RemoteFileGrid* remoteFileGrid_;
         ConsoleTextView* consoleTextView_;
         McuListComboBox* mcuListComboBox_;
+        FlashingBox* flashingBox_;
 
         std::unique_ptr<UserConfiguration> userConfig_;
-
-        DeviceHandler deviceHandler_;
     };
 
 } // namespace qmk
