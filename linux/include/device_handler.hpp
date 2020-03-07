@@ -8,6 +8,16 @@ namespace qmk
 
     class ConsoleTextView;
 
+    struct Device
+    {
+        std::string deviceName;
+        std::string vendorId;
+        std::string productId;
+        std::string manufacturerName;
+        std::string productName;
+        std::string devPath = "";
+    };
+
     class DeviceHandler
     {
     public:

@@ -13,6 +13,30 @@
 namespace qmk
 {
 
+    class UdevDevice
+    {
+    public:
+        UdevDevice(struct udev_device* device) : device_(device) {}
+
+        ~UdevDevice()
+        {
+            udev_device_unref(device_);
+        }
+
+        operator struct udev_device*() const
+        {
+            return device_;
+        }
+
+        operator bool() const
+        {
+            return device_;
+        }
+
+    private:
+        struct udev_device* device_;
+    };
+
     DeviceHandler::DeviceHandler() {}
 
     void DeviceHandler::Initialize(ConsoleTextView* consoleTextView)
@@ -47,38 +71,46 @@ namespace qmk
                 int ready = select(fd+1, &fds, NULL, NULL, &tv);
                 if (ready > 0 && FD_ISSET(fd, &fds))
                 {
-                    struct udev_device* device = udev_monitor_receive_device(monitor);
-                    if (device)
+                    UdevDevice udevDevice = udev_monitor_receive_device(monitor);
+                    if (udevDevice)
                     {
-                        std::string action = udev_device_get_action(device);
+                        std::string action = udev_device_get_action(udevDevice);
 
-                        if(action == "add" || action == "remove")
+                        std::string sysPath = udev_device_get_syspath(udevDevice);
+
+                        Device device;
+
+                        if(action == "add")
                         {
-                            std::string subsystem = udev_device_get_subsystem(device);
+                            std::string subsystem = udev_device_get_subsystem(udevDevice);
 
-                            const char* manufacturerName = udev_device_get_property_value(device, "manufacturer");
-                            const char* productName = udev_device_get_property_value(device, "product");
+                            const char* manufacturerName = udev_device_get_property_value(udevDevice, "manufacturer");
+                            const char* productName = udev_device_get_property_value(udevDevice, "product");
                             if(manufacturerName == nullptr) manufacturerName = "";
                             if(productName == nullptr) productName = "";
+
+                            device.manufacturerName = manufacturerName;
+                            device.productName = productName;
 
                             if(subsystem == "usb")
                             {
                                 // Check for devices not programmed using avrdude (don't require dev path)
-                                const char* vendor = udev_device_get_sysattr_value(device, "idVendor");
-                                const char* product = udev_device_get_sysattr_value(device, "idProduct");
+                                const char* vendor = udev_device_get_sysattr_value(udevDevice, "idVendor");
+                                const char* product = udev_device_get_sysattr_value(udevDevice, "idProduct");
                                 if(!vendor || !product) continue;
+
+                                device.vendorId = vendor;
+                                device.productId = product;
 
                                 int vendorId = std::stoi(std::string(vendor), nullptr, 16);
                                 int productId = std::stoi(std::string(product), nullptr, 16);
-
-                                std::string deviceName = "";
                                 
                                 switch(vendorId)
                                 {
                                     case 0x03EB:
                                     {
                                         // Atmel - DFU
-                                        deviceName = "DFU";
+                                        device.deviceName = "DFU";
                                         break;
                                     }
                                     case 0x16C0:
@@ -88,14 +120,19 @@ namespace qmk
                                             case 0x05DF:
                                             {
                                                 // Objective Development
-                                                deviceName = "BootloadHID";
+                                                device.deviceName = "BootloadHID";
                                                 break;
                                             }
                                             case 0x0478:
                                             {
                                                 // PJRC
-                                                deviceName = "Halfkay";
+                                                device.deviceName = "Halfkay";
                                                 break;
+                                            }
+                                            default:
+                                            {
+                                                // Other devices
+                                                continue;
                                             }
                                         }
 
@@ -103,135 +140,174 @@ namespace qmk
                                     }
                                     case 0x0483:
                                     { 
-                                        if(productId == 0xDF11)
+                                        switch(productId)
                                         {
-                                            // STM32
-                                            deviceName = "STM32";
+                                            case 0xDF11:
+                                            {
+                                                // STM32
+                                                device.deviceName = "STM32";
+                                                break;
+                                            }
+                                            default:
+                                            {
+                                                // Other devices
+                                                continue;
+                                            }
                                         }
                                         
                                         break;
                                     }
                                     case 0x1C11:
                                     {
-                                        if(productId == 0xB007)
-                                        { 
-                                            // Kiibohd
-                                            deviceName = "Kiibohd";
+                                        switch(productId)
+                                        {
+                                            case 0xB007:
+                                            {
+                                                // Kiibohd
+                                                device.deviceName = "Kiibohd";
+                                            }
+                                            default:
+                                            {
+                                                // Other devices
+                                                continue;
+                                            }
                                         }
 
-                                        // Other devices
                                         break;
                                     }
-                                }
-
-                                if(deviceName != "")
-                                {
-                                    std::stringstream message;
-                                    message << deviceName << " device " << ((action == "add") ? "connected":"disconnected") << " ";
-                                    message << std::string(manufacturerName) + " " + std::string(productName) + " (";
-                                    message << std::setfill('0') << std::setw(4) << std::hex << vendorId;
-                                    message << ":";
-                                    message << std::setw(4) << productId;
-                                    message << ")";
-                                    consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
+                                    default:
+                                    {
+                                        // Other devices
+                                        continue;
+                                    }
                                 }
                             }
                             else if(subsystem == "tty")
                             {
                                 // Check for devices programmed using avrdude
-                                const char* devNode = udev_device_get_devnode(device);
-                                if(devNode)
-                                {
-                                    const char* vendor = udev_device_get_property_value(device, "ID_VENDOR_ID");
-                                    const char* product = udev_device_get_property_value(device, "ID_MODEL_ID");
-                                    if(!vendor || !product) continue;
+                                const char* devNode = udev_device_get_devnode(udevDevice);
+                                if(!devNode) continue;
 
-                                    int vendorId = std::stoi(std::string(vendor), nullptr, 16);
-                                    int productId = std::stoi(std::string(product), nullptr, 16);
-                                    
-                                    std::string deviceName;
-                                    switch(vendorId)
+                                device.devPath = devNode;
+                                
+                                const char* vendor = udev_device_get_property_value(udevDevice, "ID_VENDOR_ID");
+                                const char* product = udev_device_get_property_value(udevDevice, "ID_MODEL_ID");
+                                if(!vendor || !product) continue;
+
+                                device.vendorId = vendor;
+                                device.productId = product;
+
+                                int vendorId = std::stoi(std::string(vendor), nullptr, 16);
+                                int productId = std::stoi(std::string(product), nullptr, 16);
+                                
+                                switch(vendorId)
+                                {
+                                    case 0x03EB:
                                     {
-                                        case 0x03EB:
+                                        // Atmel
+                                        switch(productId)
                                         {
-                                            // Atmel
-                                            if(productId == 0x6124)
+                                            case 0x6124:
                                             {
                                                 // SAM-BA
-                                                deviceName = "Atmel SAM-BA";
+                                                device.deviceName = "Atmel SAM-BA";
                                                 break;
                                             }
-
-                                            break;
-                                        }
-                                        case 0x2341:
-                                        {
-                                            // Arduino
-                                            deviceName = "Caterina";
-                                            break;
-                                        }
-                                        case 0x1B4F:
-                                        {
-                                            // Sparkfun
-                                            deviceName = "Caterina";
-                                            break;
-                                        }
-                                        case 0x239A:
-                                        {
-                                            // Adafruit
-                                            deviceName = "Caterina";
-                                            break;
-                                        }
-                                        case 0x16C0:
-                                        {
-                                            switch(productId)
+                                            default:
                                             {
-                                                case 0x0483:
-                                                {
-                                                    // Arduino ISP
-                                                    deviceName = "AVRISP";
-                                                    break;
-                                                }
-                                                case 0x05DC:
-                                                {
-                                                    // AVR USBAsp
-                                                    deviceName = "USBAsp";
-                                                    break;
-                                                }
+                                                // Other devices
+                                                continue;
                                             }
-
-                                            break;
                                         }
-                                        case 0x1781:
-                                        { 
-                                            if(productId == 0x0C9F)
+
+                                        break;
+                                    }
+                                    case 0x2341:
+                                    {
+                                        // Arduino
+                                        device.deviceName = "Caterina";
+                                        break;
+                                    }
+                                    case 0x1B4F:
+                                    {
+                                        // Sparkfun
+                                        device.deviceName = "Caterina";
+                                        break;
+                                    }
+                                    case 0x239A:
+                                    {
+                                        // Adafruit
+                                        device.deviceName = "Caterina";
+                                        break;
+                                    }
+                                    case 0x16C0:
+                                    {
+                                        switch(productId)
+                                        {
+                                            case 0x0483:
+                                            {
+                                                // Arduino ISP
+                                                device.deviceName = "AVRISP";
+                                                break;
+                                            }
+                                            case 0x05DC:
+                                            {
+                                                // AVR USBAsp
+                                                device.deviceName = "USBAsp";
+                                                break;
+                                            }
+                                            default:
+                                            {
+                                                // Other devices
+                                                continue;
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                    case 0x1781:
+                                    {
+                                        switch(productId)
+                                        {
+                                            case 0x0C9F:
                                             {
                                                 // AVR Pocket ISP
-                                                deviceName = "USB Tiny";
+                                                device.deviceName = "USB Tiny";
                                                 break;
                                             }
-
-                                            break;
+                                            default:
+                                            {
+                                                // Other devices
+                                                continue;
+                                            }
                                         }
-                                    }
 
-                                    if(deviceName != "")
+                                        break;
+                                    }
+                                    default:
                                     {
-                                        std::stringstream message;
-                                        message << deviceName << " device " << ((action == "add") ? "connected":"disconnected") << " ";
-                                        message << std::string(manufacturerName) + " " + std::string(productName) + " (";
-                                        message << std::setfill('0') << std::setw(4) << std::hex << vendorId;
-                                        message << ":";
-                                        message << std::setw(4) << productId;
-                                        message << ")";
-                                        if(action == "add") message << " @ " << std::string(devNode);
-                                        consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
+                                        // Other devices
+                                        continue;
                                     }
                                 }
                             }
                         }
+                        else if(action == "remove")
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        
 
-                        udev_device_unref(device);
+                        std::stringstream message;
+                        message << device.deviceName << " device " << ((action == "add") ? "connected":"disconnected") << " ";
+                        message << device.manufacturerName << " "<< device.productName;
+                        message << " (" << device.vendorId << ":" << device.productId << ")";
+                        if(device.devPath != "") message << " @ " << std::string(device.devPath);
+                        consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
                     }
                 }
 
