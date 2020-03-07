@@ -45,6 +45,13 @@ namespace qmk
         localFileComboBox_->prepend(filePath);
         localFileComboBox_->set_active(0);
     }
+
+    std::string LocalFileBox::GetActiveEntry()
+    {
+        Glib::ustring value;
+        localFileComboBox_->get_active()->get_value(0, value);
+        return value;
+    }
     
     void LocalFileBox::AppendEntry(const std::string& filePath)
     {

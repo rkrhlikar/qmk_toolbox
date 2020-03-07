@@ -19,6 +19,7 @@ namespace qmk
         virtual ~LocalFileBox();
 
         void AddActiveEntry(const std::string& filePath);
+        std::string GetActiveEntry();
         void AppendEntry(const std::string& filePath);
         std::vector<std::string> GetLocalFilesList();
 
