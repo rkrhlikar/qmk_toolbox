@@ -392,8 +392,8 @@ namespace qmk
                     }
                     case Device::Chipset::CATERINA:
                     {
-                        std::string args = "-C avrdude.conf -p " + microcontroller + " -c avr109 -U flash:w:\"" + filePath + "\":i -P " + device.devPath;
-                        consoleTextView_->Print("avrdude " + args, ConsoleTextView::MessageType::COMMAND);
+                        std::string args = "-C config/avrdude.conf -p " + microcontroller + " -c avr109 -U flash:w:\"" + filePath + "\":i -P " + device.devPath;
+                        consoleTextView_->Print("./bin/avrdude " + args, ConsoleTextView::MessageType::COMMAND);
 
                         std::array<char, 256> buffer;
                         std::stringstream outputStream;

@@ -11,7 +11,7 @@ namespace qmk
     McuListComboBox::McuListComboBox(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder)
                                                                                         : Gtk::ComboBoxText(object)
     {
-        std::ifstream mcuList("mcu-list.txt");
+        std::ifstream mcuList("config/mcu-list.txt");
         if(!mcuList.is_open()) throw std::runtime_error("Failed to load microcontrollers list");
 
         std::string entry;

@@ -10,11 +10,11 @@ configure_file(assets/main.glade assets/main.glade COPYONLY)
 configure_file(assets/icon.svg assets/icon.svg COPYONLY)
 
 # Copy microcontrollers list to binary directory
-configure_file(../common/mcu-list.txt mcu-list.txt COPYONLY)
+configure_file(../common/mcu-list.txt config/mcu-list.txt COPYONLY)
 
 # Copy avrdude and configuration to binary directory
 configure_file(binaries/avrdude bin/avrdude COPYONLY)
-configure_file(../common/avrdude.conf avrdude.conf COPYONLY)
+configure_file(../common/avrdude.conf config/avrdude.conf COPYONLY)
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
