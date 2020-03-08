@@ -398,7 +398,7 @@ namespace qmk
                         std::array<char, 256> buffer;
                         std::stringstream outputStream;
 
-                        std::string command = "./avrdude " + args + " 2>&1";
+                        std::string command = "./bin/avrdude " + args + " 2>&1";
 
                         FILE* pipe = popen(command.c_str(), "r");
                         if(!pipe) throw std::runtime_error("Failed to run command");
