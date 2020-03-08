@@ -8,7 +8,7 @@
     <property name="title" translatable="yes">QMK Toolbox</property>
     <property name="default_width">670</property>
     <property name="default_height">600</property>
-    <property name="icon">output.ico</property>
+    <property name="icon">icon.svg</property>
     <signal name="destroy" handler="on_main_destroy" swapped="no"/>
     <child>
       <placeholder/>

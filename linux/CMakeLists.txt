@@ -7,7 +7,7 @@ project(qmk_toolbox)
 
 # Copy glade xml file and icon to binary directory
 configure_file(assets/main.glade assets/main.glade COPYONLY)
-configure_file(assets/output.ico assets/output.ico COPYONLY)
+configure_file(assets/icon.svg assets/icon.svg COPYONLY)
 
 # Copy microcontrollers list to binary directory
 configure_file(../common/mcu-list.txt mcu-list.txt COPYONLY)
