@@ -369,6 +369,51 @@ namespace qmk
         udevThread_.join();
     }
 
+    static void RunCommand(const std::string& command, ConsoleTextView* consoleTextView)
+    {
+        FILE* pipe = popen(command.c_str(), "r");
+        if(!pipe) throw std::runtime_error("Failed to run command");
+
+        std::array<char, 256> buffer;
+        std::stringstream outputStream;
+
+        while(fgets(buffer.data(), buffer.size(), pipe) != NULL)
+        {
+            outputStream << buffer.data();
+            std::string line;
+            std::getline(outputStream, line);
+            if(line != "")
+            {
+                line += "\n";
+                consoleTextView->PrintResponse(line, ConsoleTextView::MessageType::INFO);
+                
+                if (line.find("Bootloader and code overlap.") != std::string::npos || // DFU
+                    line.find("exceeds remaining flash size!") != std::string::npos || // BootloadHID
+                    line.find("Not enough bytes in device info report") != std::string::npos) // BootloadHID
+                {
+                    consoleTextView->Print("File is too large for device", ConsoleTextView::MessageType::ERROR);
+                }
+            }
+        }
+
+        pclose(pipe);        
+    }
+
+    static void FlashAvrdudeDevice(const std::string& programmer,
+                                   const std::string& microcontroller,
+                                   const std::string& port,
+                                   const std::string& filePath,
+                                   ConsoleTextView* consoleTextView)
+    {
+        std::string command = "./bin/avrdude -C config/avrdude.conf -c " + programmer
+                              + " -p " + microcontroller
+                              + " -U flash:w:\"" + filePath
+                              + "\":i -P " + port;
+        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        command += " 2>&1";
+        RunCommand(command, consoleTextView);
+    }
+
     void DeviceHandler::FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath)
     {
         if(flashingThread_.joinable()) flashingThread_.join();
@@ -392,38 +437,7 @@ namespace qmk
                     }
                     case Device::Chipset::CATERINA:
                     {
-                        std::string args = "-C config/avrdude.conf -p " + microcontroller + " -c avr109 -U flash:w:\"" + filePath + "\":i -P " + device.devPath;
-                        consoleTextView_->Print("./bin/avrdude " + args, ConsoleTextView::MessageType::COMMAND);
-
-                        std::array<char, 256> buffer;
-                        std::stringstream outputStream;
-
-                        std::string command = "./bin/avrdude " + args + " 2>&1";
-
-                        FILE* pipe = popen(command.c_str(), "r");
-                        if(!pipe) throw std::runtime_error("Failed to run command");
-
-                        while(fgets(buffer.data(), buffer.size(), pipe) != NULL)
-                        {
-                            outputStream << buffer.data();
-                            std::string line;
-                            std::getline(outputStream, line);
-                            if(line != "")
-                            {
-                                line += "\n";
-                                consoleTextView_->PrintResponse(line, ConsoleTextView::MessageType::INFO);
-                                
-                                if (line.find("Bootloader and code overlap.") != std::string::npos || // DFU
-                                    line.find("exceeds remaining flash size!") != std::string::npos || // BootloadHID
-                                    line.find("Not enough bytes in device info report") != std::string::npos) // BootloadHID
-                                {
-                                    consoleTextView_->Print("File is too large for device", ConsoleTextView::MessageType::ERROR);
-                                }
-                            }
-                        }
-
-                        pclose(pipe);
-
+                        FlashAvrdudeDevice("avr109", microcontroller, device.devPath, filePath, consoleTextView_);
                         break;
                     }
                     case Device::Chipset::STM32:
@@ -436,14 +450,17 @@ namespace qmk
                     }
                     case Device::Chipset::AVR_ISP:
                     {
+                        FlashAvrdudeDevice("avrisp", microcontroller, device.devPath, filePath, consoleTextView_);
                         break;
                     }
                     case Device::Chipset::USB_ASP:
                     {
+                        FlashAvrdudeDevice("usbasp", microcontroller, "usb", filePath, consoleTextView_);
                         break;
                     }
                     case Device::Chipset::USB_TINY:
                     {
+                        FlashAvrdudeDevice("usbtiny", microcontroller, device.devPath, filePath, consoleTextView_);
                         break;
                     }
                     case Device::Chipset::BOOTLOAD_HID:
