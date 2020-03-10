@@ -414,6 +414,29 @@ namespace qmk
         RunCommand(command, consoleTextView);
     }
 
+    static void FlashDFUDevice(const std::string& microcontroller,
+                               const std::string& filePath,
+                               ConsoleTextView* consoleTextView)
+    {
+        // Clear device
+        std::string command = "./bin/dfu-programmer " + microcontroller + " erase --force";
+        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        command += " 2>&1";
+        RunCommand(command, consoleTextView);
+
+        // Flash firmware
+        command = "./bin/dfu-programmer " + microcontroller + " flash \"" + filePath + "\"";
+        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        command += " 2>&1";
+        RunCommand(command, consoleTextView);
+
+        // Reset device
+        command = "./bin/dfu-programmer " + microcontroller + " reset";
+        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        command += " 2>&1";
+        RunCommand(command, consoleTextView);
+    }
+
     void DeviceHandler::FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath)
     {
         if(flashingThread_.joinable()) flashingThread_.join();
@@ -429,6 +452,7 @@ namespace qmk
                 {
                     case Device::Chipset::DFU:
                     {
+                        FlashDFUDevice(microcontroller, filePath, consoleTextView_);
                         break;
                     }
                     case Device::Chipset::HALFKAY:
