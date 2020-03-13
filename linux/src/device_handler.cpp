@@ -69,6 +69,228 @@ namespace qmk
 
     DeviceHandler::DeviceHandler() {}
 
+    static bool GetUSBDeviceData(const UdevDevice& udevDevice, Device& device)
+    {
+        const char* manufacturerName = udev_device_get_property_value(udevDevice, "manufacturer");
+        const char* productName = udev_device_get_property_value(udevDevice, "product");
+        if(manufacturerName == nullptr) manufacturerName = "";
+        if(productName == nullptr) productName = "";
+
+        device.manufacturerName = manufacturerName;
+        device.productName = productName;
+
+        // Check for devices not programmed using avrdude (don't require dev path)
+        const char* vendor = udev_device_get_sysattr_value(udevDevice, "idVendor");
+        const char* product = udev_device_get_sysattr_value(udevDevice, "idProduct");
+        if(!vendor || !product) return false;
+
+        device.vendorId = vendor;
+        device.productId = product;
+
+        int vendorId = std::stoi(std::string(vendor), nullptr, 16);
+        int productId = std::stoi(std::string(product), nullptr, 16);
+        
+        switch(vendorId)
+        {
+            case 0x03EB:
+            {
+                // Atmel - DFU
+                device.chipset = Device::Chipset::DFU;
+                return true;
+            }
+            case 0x16C0:
+            {
+                switch(productId)
+                {
+                    case 0x05DF:
+                    {
+                        // Objective Development
+                        device.chipset = Device::Chipset::BOOTLOAD_HID;
+                        return true;
+                    }
+                    case 0x0478:
+                    {
+                        // PJRC
+                        device.chipset = Device::Chipset::HALFKAY;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;
+                    }
+                }
+
+                break;
+            }
+            case 0x0483:
+            { 
+                switch(productId)
+                {
+                    case 0xDF11:
+                    {
+                        // STM32
+                        device.chipset = Device::Chipset::STM32;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;
+                    }
+                }
+                
+                break;
+            }
+            case 0x1C11:
+            {
+                switch(productId)
+                {
+                    case 0xB007:
+                    {
+                        // Kiibohd
+                        device.chipset = Device::Chipset::KIIBOHD;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;;
+                    }
+                }
+
+                break;
+            }
+            default:
+            {
+                // Other devices
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    static bool GetTTYDeviceData(const UdevDevice& udevDevice, Device& device)
+    {
+        const char* manufacturerName = udev_device_get_property_value(udevDevice, "manufacturer");
+        const char* productName = udev_device_get_property_value(udevDevice, "product");
+        if(manufacturerName == nullptr) manufacturerName = "";
+        if(productName == nullptr) productName = "";
+
+        device.manufacturerName = manufacturerName;
+        device.productName = productName;
+
+        // Check for devices programmed using avrdude
+        const char* devNode = udev_device_get_devnode(udevDevice);
+        if(!devNode) return false;
+
+        device.devPath = devNode;
+        
+        const char* vendor = udev_device_get_property_value(udevDevice, "ID_VENDOR_ID");
+        const char* product = udev_device_get_property_value(udevDevice, "ID_MODEL_ID");
+        if(!vendor || !product) return false;
+
+        device.vendorId = vendor;
+        device.productId = product;
+
+        int vendorId = std::stoi(std::string(vendor), nullptr, 16);
+        int productId = std::stoi(std::string(product), nullptr, 16);
+        
+        switch(vendorId)
+        {
+            case 0x03EB:
+            {
+                // Atmel
+                switch(productId)
+                {
+                    case 0x6124:
+                    {
+                        // SAM-BA
+                        device.chipset = Device::Chipset::ATMEL_SAM_BA;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;
+                    }
+                }
+
+                break;
+            }
+            case 0x2341:
+            {
+                // Arduino
+                device.chipset = Device::Chipset::CATERINA;
+                return true;
+            }
+            case 0x1B4F:
+            {
+                // Sparkfun
+                device.chipset = Device::Chipset::CATERINA;
+                return true;
+            }
+            case 0x239A:
+            {
+                // Adafruit
+                device.chipset = Device::Chipset::CATERINA;
+                return true;
+            }
+            case 0x16C0:
+            {
+                switch(productId)
+                {
+                    case 0x0483:
+                    {
+                        // Arduino ISP
+                        device.chipset = Device::Chipset::AVR_ISP;
+                        return true;
+                    }
+                    case 0x05DC:
+                    {
+                        // AVR USBAsp
+                        device.chipset = Device::Chipset::USB_ASP;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;
+                    }
+                }
+
+                break;
+            }
+            case 0x1781:
+            {
+                switch(productId)
+                {
+                    case 0x0C9F:
+                    {
+                        // AVR Pocket ISP
+                        device.chipset = Device::Chipset::USB_TINY;
+                        return true;
+                    }
+                    default:
+                    {
+                        // Other devices
+                        return false;
+                    }
+                }
+
+                break;
+            }
+            default:
+            {
+                // Other devices
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     void DeviceHandler::Initialize(ConsoleTextView* consoleTextView)
     {
         consoleTextView_ = consoleTextView;
@@ -78,6 +300,50 @@ namespace qmk
         udevThread_ = std::thread([this]() {
             struct udev* udev = udev_new();
             if(!udev) throw std::runtime_error("Can't create udev");
+
+            struct udev_enumerate* enumerate = udev_enumerate_new(udev);
+            if(!enumerate) throw std::runtime_error("Can't create udev enumerate");
+
+            udev_enumerate_add_match_subsystem(enumerate, "usb");
+            udev_enumerate_add_match_subsystem(enumerate, "tty");
+            udev_enumerate_scan_devices(enumerate);
+
+            for (struct udev_list_entry* entry = udev_enumerate_get_list_entry(enumerate); 
+                 entry; 
+                 entry = udev_list_entry_get_next(entry))
+            {
+                const char* path = udev_list_entry_get_name(entry);
+                UdevDevice udevDevice = udev_device_new_from_syspath(udev, path);
+
+                std::string sysPath = udev_device_get_syspath(udevDevice);
+
+                std::string subsystem = udev_device_get_subsystem(udevDevice);
+
+                Device device;
+
+                if(subsystem == "usb")
+                {
+                    if(!GetUSBDeviceData(udevDevice, device)) continue;
+                }
+                else if(subsystem == "tty")
+                {
+                    if(!GetTTYDeviceData(udevDevice, device)) continue;
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(devicesMapLock_);
+                    devicesMap_[sysPath] = device;
+                }
+
+                std::stringstream message;
+                message << ChipsetToString(device.chipset) << " device found ";
+                message << device.manufacturerName << " "<< device.productName;
+                message << " (" << device.vendorId << ":" << device.productId << ")";
+                if(device.devPath != "") message << " @ " << std::string(device.devPath);
+                consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
+            }
+
+            udev_enumerate_unref(enumerate);
 
             struct udev_monitor* monitor = udev_monitor_new_from_netlink(udev, "udev");
             if(!monitor) throw std::runtime_error("Can't create udev monitor");
@@ -114,212 +380,13 @@ namespace qmk
                         {
                             std::string subsystem = udev_device_get_subsystem(udevDevice);
 
-                            const char* manufacturerName = udev_device_get_property_value(udevDevice, "manufacturer");
-                            const char* productName = udev_device_get_property_value(udevDevice, "product");
-                            if(manufacturerName == nullptr) manufacturerName = "";
-                            if(productName == nullptr) productName = "";
-
-                            device.manufacturerName = manufacturerName;
-                            device.productName = productName;
-
                             if(subsystem == "usb")
                             {
-                                // Check for devices not programmed using avrdude (don't require dev path)
-                                const char* vendor = udev_device_get_sysattr_value(udevDevice, "idVendor");
-                                const char* product = udev_device_get_sysattr_value(udevDevice, "idProduct");
-                                if(!vendor || !product) continue;
-
-                                device.vendorId = vendor;
-                                device.productId = product;
-
-                                int vendorId = std::stoi(std::string(vendor), nullptr, 16);
-                                int productId = std::stoi(std::string(product), nullptr, 16);
-                                
-                                switch(vendorId)
-                                {
-                                    case 0x03EB:
-                                    {
-                                        // Atmel - DFU
-                                        device.chipset = Device::Chipset::DFU;
-                                        break;
-                                    }
-                                    case 0x16C0:
-                                    {
-                                        switch(productId)
-                                        {
-                                            case 0x05DF:
-                                            {
-                                                // Objective Development
-                                                device.chipset = Device::Chipset::BOOTLOAD_HID;
-                                                break;
-                                            }
-                                            case 0x0478:
-                                            {
-                                                // PJRC
-                                                device.chipset = Device::Chipset::HALFKAY;
-                                                break;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                    case 0x0483:
-                                    { 
-                                        switch(productId)
-                                        {
-                                            case 0xDF11:
-                                            {
-                                                // STM32
-                                                device.chipset = Device::Chipset::STM32;
-                                                break;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-                                        
-                                        break;
-                                    }
-                                    case 0x1C11:
-                                    {
-                                        switch(productId)
-                                        {
-                                            case 0xB007:
-                                            {
-                                                // Kiibohd
-                                                device.chipset = Device::Chipset::KIIBOHD;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        // Other devices
-                                        continue;
-                                    }
-                                }
+                                if(!GetUSBDeviceData(udevDevice, device)) continue;
                             }
                             else if(subsystem == "tty")
                             {
-                                // Check for devices programmed using avrdude
-                                const char* devNode = udev_device_get_devnode(udevDevice);
-                                if(!devNode) continue;
-
-                                device.devPath = devNode;
-                                
-                                const char* vendor = udev_device_get_property_value(udevDevice, "ID_VENDOR_ID");
-                                const char* product = udev_device_get_property_value(udevDevice, "ID_MODEL_ID");
-                                if(!vendor || !product) continue;
-
-                                device.vendorId = vendor;
-                                device.productId = product;
-
-                                int vendorId = std::stoi(std::string(vendor), nullptr, 16);
-                                int productId = std::stoi(std::string(product), nullptr, 16);
-                                
-                                switch(vendorId)
-                                {
-                                    case 0x03EB:
-                                    {
-                                        // Atmel
-                                        switch(productId)
-                                        {
-                                            case 0x6124:
-                                            {
-                                                // SAM-BA
-                                                device.chipset = Device::Chipset::ATMEL_SAM_BA;
-                                                break;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                    case 0x2341:
-                                    {
-                                        // Arduino
-                                        device.chipset = Device::Chipset::CATERINA;
-                                        break;
-                                    }
-                                    case 0x1B4F:
-                                    {
-                                        // Sparkfun
-                                        device.chipset = Device::Chipset::CATERINA;
-                                        break;
-                                    }
-                                    case 0x239A:
-                                    {
-                                        // Adafruit
-                                        device.chipset = Device::Chipset::CATERINA;
-                                        break;
-                                    }
-                                    case 0x16C0:
-                                    {
-                                        switch(productId)
-                                        {
-                                            case 0x0483:
-                                            {
-                                                // Arduino ISP
-                                                device.chipset = Device::Chipset::AVR_ISP;
-                                                break;
-                                            }
-                                            case 0x05DC:
-                                            {
-                                                // AVR USBAsp
-                                                device.chipset = Device::Chipset::USB_ASP;
-                                                break;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                    case 0x1781:
-                                    {
-                                        switch(productId)
-                                        {
-                                            case 0x0C9F:
-                                            {
-                                                // AVR Pocket ISP
-                                                device.chipset = Device::Chipset::USB_TINY;
-                                                break;
-                                            }
-                                            default:
-                                            {
-                                                // Other devices
-                                                continue;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        // Other devices
-                                        continue;
-                                    }
-                                }
+                                if(!GetTTYDeviceData(udevDevice, device)) continue;
                             }
 
                             {
