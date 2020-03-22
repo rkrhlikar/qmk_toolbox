@@ -8,7 +8,7 @@
 namespace qmk
 {
 
-    class ConsoleTextView;
+    class IConsole;
 
     struct Device
     {
@@ -40,12 +40,12 @@ namespace qmk
         DeviceHandler();
         ~DeviceHandler();
 
-        void Initialize(ConsoleTextView* consoleTextView);
+        void Initialize(IConsole* console);
 
         void FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath);
 
     private:
-        ConsoleTextView* consoleTextView_;
+        IConsole* console_;
 
         std::atomic<bool> stop_;
         std::thread udevThread_;

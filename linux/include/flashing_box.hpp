@@ -12,7 +12,8 @@ namespace Gtk
 
 namespace qmk
 {
-    class ConsoleTextView;
+    
+    class IConsole;
     class LocalFileBox;
     class McuListComboBox;
 
@@ -22,7 +23,7 @@ namespace qmk
         FlashingBox(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder);
         virtual ~FlashingBox();
 
-        void Initialize(ConsoleTextView* consoleTextView,
+        void Initialize(IConsole* console,
                         LocalFileBox* localFileBox,
                         McuListComboBox* mcuListComboBox);
 

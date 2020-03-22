@@ -8,7 +8,8 @@ namespace qmk
 {
 
     ConsoleTextView::ConsoleTextView(BaseObjectType* object, const Glib::RefPtr<Gtk::Builder>& builder)
-                                                                                        : Gtk::TextView(object)
+                                                                                        : Gtk::TextView(object),
+                                                                                          IConsole()
     {
         Glib::RefPtr<Gtk::TextBuffer> buffer = get_buffer();
         buffer->create_tag("white")->property_foreground() = "#ffffff";

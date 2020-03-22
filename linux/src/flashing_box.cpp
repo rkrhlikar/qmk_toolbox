@@ -5,7 +5,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/button.h>
 
-#include "console_text_view.hpp"
+#include "iconsole.hpp"
 #include "local_file_box.hpp"
 #include "mcu_list_combo_box.hpp"
 
@@ -26,9 +26,9 @@ namespace qmk
 
     FlashingBox::~FlashingBox() {}
 
-    void FlashingBox::Initialize(ConsoleTextView* consoleTextView, LocalFileBox* localFileBox, McuListComboBox* mcuListComboBox)
+    void FlashingBox::Initialize(IConsole* console, LocalFileBox* localFileBox, McuListComboBox* mcuListComboBox)
     {
-        deviceHandler_.Initialize(consoleTextView);
+        deviceHandler_.Initialize(console);
 
         localFileBox_ = localFileBox;
         mcuListComboBox_ = mcuListComboBox;

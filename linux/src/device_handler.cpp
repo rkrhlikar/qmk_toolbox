@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <libudev.h>
 
-#include "console_text_view.hpp"
+#include "iconsole.hpp"
 
 namespace qmk
 {
@@ -291,9 +291,9 @@ namespace qmk
         return false;
     }
 
-    void DeviceHandler::Initialize(ConsoleTextView* consoleTextView)
+    void DeviceHandler::Initialize(IConsole* console)
     {
-        consoleTextView_ = consoleTextView;
+        console_ = console;
 
         stop_ = false;
 
@@ -340,7 +340,7 @@ namespace qmk
                 message << device.manufacturerName << " "<< device.productName;
                 message << " (" << device.vendorId << ":" << device.productId << ")";
                 if(device.devPath != "") message << " @ " << std::string(device.devPath);
-                consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
+                console_->Print(message.str(), IConsole::MessageType::BOOTLOADER);
             }
 
             udev_enumerate_unref(enumerate);
@@ -418,7 +418,7 @@ namespace qmk
                         message << device.manufacturerName << " "<< device.productName;
                         message << " (" << device.vendorId << ":" << device.productId << ")";
                         if(device.devPath != "") message << " @ " << std::string(device.devPath);
-                        consoleTextView_->Print(message.str(), ConsoleTextView::MessageType::BOOTLOADER);
+                        console_->Print(message.str(), IConsole::MessageType::BOOTLOADER);
                     }
                 }
 
@@ -434,9 +434,10 @@ namespace qmk
     {
         stop_ = true;
         udevThread_.join();
+        if(flashingThread_.joinable()) flashingThread_.join();
     }
 
-    static void RunCommand(const std::string& command, ConsoleTextView* consoleTextView)
+    static void RunCommand(const std::string& command, IConsole* console)
     {
         FILE* pipe = popen(command.c_str(), "r");
         if(!pipe) throw std::runtime_error("Failed to run command");
@@ -452,13 +453,13 @@ namespace qmk
             if(line != "")
             {
                 line += "\n";
-                consoleTextView->PrintResponse(line, ConsoleTextView::MessageType::INFO);
+                console->PrintResponse(line, IConsole::MessageType::INFO);
                 
                 if (line.find("Bootloader and code overlap.") != std::string::npos || // DFU
                     line.find("exceeds remaining flash size!") != std::string::npos || // BootloadHID
                     line.find("Not enough bytes in device info report") != std::string::npos) // BootloadHID
                 {
-                    consoleTextView->Print("File is too large for device", ConsoleTextView::MessageType::ERROR);
+                    console->Print("File is too large for device", IConsole::MessageType::ERROR);
                 }
             }
         }
@@ -470,38 +471,38 @@ namespace qmk
                                    const std::string& microcontroller,
                                    const std::string& port,
                                    const std::string& filePath,
-                                   ConsoleTextView* consoleTextView)
+                                   IConsole* console)
     {
         std::string command = "./bin/avrdude -C config/avrdude.conf -c " + programmer
                               + " -p " + microcontroller
                               + " -U flash:w:\"" + filePath
                               + "\":i -P " + port;
-        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        console->Print(command, IConsole::MessageType::COMMAND);
         command += " 2>&1";
-        RunCommand(command, consoleTextView);
+        RunCommand(command, console);
     }
 
     static void FlashDFUDevice(const std::string& microcontroller,
                                const std::string& filePath,
-                               ConsoleTextView* consoleTextView)
+                               IConsole* console)
     {
         // Clear device
         std::string command = "./bin/dfu-programmer " + microcontroller + " erase --force";
-        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        console->Print(command, IConsole::MessageType::COMMAND);
         command += " 2>&1";
-        RunCommand(command, consoleTextView);
+        RunCommand(command, console);
 
         // Flash firmware
         command = "./bin/dfu-programmer " + microcontroller + " flash \"" + filePath + "\"";
-        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        console->Print(command, IConsole::MessageType::COMMAND);
         command += " 2>&1";
-        RunCommand(command, consoleTextView);
+        RunCommand(command, console);
 
         // Reset device
         command = "./bin/dfu-programmer " + microcontroller + " reset";
-        consoleTextView->Print(command, ConsoleTextView::MessageType::COMMAND);
+        console->Print(command, IConsole::MessageType::COMMAND);
         command += " 2>&1";
-        RunCommand(command, consoleTextView);
+        RunCommand(command, console);
     }
 
     void DeviceHandler::FlashConnectedDevices(const std::string& microcontroller, const std::string& filePath)
@@ -519,7 +520,7 @@ namespace qmk
                 {
                     case Device::Chipset::DFU:
                     {
-                        FlashDFUDevice(microcontroller, filePath, consoleTextView_);
+                        FlashDFUDevice(microcontroller, filePath, console_);
                         break;
                     }
                     case Device::Chipset::HALFKAY:
@@ -528,7 +529,7 @@ namespace qmk
                     }
                     case Device::Chipset::CATERINA:
                     {
-                        FlashAvrdudeDevice("avr109", microcontroller, device.devPath, filePath, consoleTextView_);
+                        FlashAvrdudeDevice("avr109", microcontroller, device.devPath, filePath, console_);
                         break;
                     }
                     case Device::Chipset::STM32:
@@ -541,17 +542,17 @@ namespace qmk
                     }
                     case Device::Chipset::AVR_ISP:
                     {
-                        FlashAvrdudeDevice("avrisp", microcontroller, device.devPath, filePath, consoleTextView_);
+                        FlashAvrdudeDevice("avrisp", microcontroller, device.devPath, filePath, console_);
                         break;
                     }
                     case Device::Chipset::USB_ASP:
                     {
-                        FlashAvrdudeDevice("usbasp", microcontroller, "usb", filePath, consoleTextView_);
+                        FlashAvrdudeDevice("usbasp", microcontroller, "usb", filePath, console_);
                         break;
                     }
                     case Device::Chipset::USB_TINY:
                     {
-                        FlashAvrdudeDevice("usbtiny", microcontroller, device.devPath, filePath, consoleTextView_);
+                        FlashAvrdudeDevice("usbtiny", microcontroller, device.devPath, filePath, console_);
                         break;
                     }
                     case Device::Chipset::BOOTLOAD_HID:
