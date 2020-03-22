@@ -32,7 +32,7 @@ namespace qmk
         // Application initialization
         namespace fs = std::experimental::filesystem;
 
-        std::string confDir = std::string(std::getenv("HOME")) + "/.config/qmk_toolkit";
+        std::string confDir = std::string(std::getenv("HOME")) + "/.config/qmk_toolbox";
         if(!fs::exists(confDir))
         {
             // Configuration directory does not exist

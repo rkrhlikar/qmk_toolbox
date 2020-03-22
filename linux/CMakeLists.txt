@@ -23,9 +23,6 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 link_directories(${GTKMM_LIBRARY_DIRS})
 include_directories(${GTKMM_INCLUDE_DIRS})
-pkg_check_modules(XMLPP libxml++-2.6)
-link_directories(${XMLPP_LIBRARY_DIRS})
-include_directories(${XMLPP_INCLUDE_DIRS})
 
 include_directories(include)
 
@@ -40,7 +37,6 @@ add_executable(qmk_toolbox src/main.cpp
                            src/flashing_box.cpp)
 
 target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES}
-                                  ${XMLPP_LIBRARIES}
                                   curl
                                   curlpp
                                   stdc++fs
