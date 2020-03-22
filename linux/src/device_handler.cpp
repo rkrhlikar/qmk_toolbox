@@ -298,6 +298,8 @@ namespace qmk
         stop_ = false;
 
         udevThread_ = std::thread([this]() {
+            // Lock devices map for enumeration
+            std::unique_lock<std::mutex> devicesMapLock(devicesMapLock_);
             struct udev* udev = udev_new();
             if(!udev) throw std::runtime_error("Can't create udev");
 
@@ -330,10 +332,7 @@ namespace qmk
                     if(!GetTTYDeviceData(udevDevice, device)) continue;
                 }
 
-                {
-                    std::lock_guard<std::mutex> lock(devicesMapLock_);
-                    devicesMap_[sysPath] = device;
-                }
+                devicesMap_[sysPath] = device;
 
                 std::stringstream message;
                 message << ChipsetToString(device.chipset) << " device found ";
@@ -344,6 +343,9 @@ namespace qmk
             }
 
             udev_enumerate_unref(enumerate);
+            
+            // Enumeration done
+            devicesMapLock.unlock();
 
             struct udev_monitor* monitor = udev_monitor_new_from_netlink(udev, "udev");
             if(!monitor) throw std::runtime_error("Can't create udev monitor");
