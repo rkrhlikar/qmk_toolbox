@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv)
 {
-    if(argc > 0)
+    if(argc > 1)
     {
         // Received terminal command
         std::string action(argv[1]);
