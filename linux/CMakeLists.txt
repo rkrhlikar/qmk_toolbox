@@ -43,3 +43,6 @@ target_link_libraries(qmk_toolbox ${GTKMM_LIBRARIES}
                                   stdc++fs
                                   udev
                                   pthread)
+
+add_custom_target(deploy COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/deploy.sh ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+                         DEPENDS qmk_toolbox)
