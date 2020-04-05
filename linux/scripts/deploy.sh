@@ -16,11 +16,11 @@ deploy_dir=$binary_dir/deploy
 mkdir -p $deploy_dir
 
 # Copy assets and configs
-cp -r $binary_dir/assets $deploy_dir/assets
-cp -r $binary_dir/config $deploy_dir/config
+cp -r $binary_dir/assets $deploy_dir/.
+cp -r $binary_dir/config $deploy_dir/.
 
 # Copy executable binaries
-cp -r $binary_dir/bin $deploy_dir/bin
+cp -r $binary_dir/bin $deploy_dir/.
 # Add qmk_toolbox executable
 cp $binary_dir/qmk_toolbox $deploy_dir/bin/qmk_toolbox
 
