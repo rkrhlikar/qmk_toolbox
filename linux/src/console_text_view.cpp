@@ -12,7 +12,7 @@ namespace qmk
                                                                                           IConsole()
     {
         Glib::RefPtr<Gtk::TextBuffer> buffer = get_buffer();
-        buffer->create_tag("white")->property_foreground() = "#ffffff";
+        buffer->create_tag("default");
         buffer->create_tag("yellow")->property_foreground() = "#ffff00";
         buffer->create_tag("red")->property_foreground() = "#ff0000";
         buffer->create_tag("light_sky_blue")->property_foreground() = "#87cefa";
@@ -56,7 +56,7 @@ namespace qmk
 
             if(text.back() == '\n') text.erase(text.end() - 1);
 
-            Glib::ustring color = "white";
+            Glib::ustring color = "default";
 
             switch(message.level)
             {
@@ -65,11 +65,11 @@ namespace qmk
                     switch(message.type)
                     {
                         case MessageType::INFO:
-                            color = "white";
+                            color = "default";
                             text = "*** " + text + "\n";
                             break;
                         case MessageType::COMMAND:
-                            color = "white";
+                            color = "default";
                             text = ">>> " + text + "\n";
                             break;
                         case MessageType::BOOTLOADER:
