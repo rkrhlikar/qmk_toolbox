@@ -23,20 +23,35 @@ namespace qmk
         {
             const toml::value config = toml::parse(filePath_);
 
-            const toml::table& hexFileSettings = toml::find<toml::table>(config, "hex_files");
-
-            std::vector<std::string> localFilesList = toml::get<std::vector<std::string>>(hexFileSettings.at("list"));
-            for(std::string& entry : localFilesList)
+            if(config.contains("hex_files"))
             {
-                localFileBox_->AppendEntry(entry);
+                const toml::table& hexFileSettings = toml::find<toml::table>(config, "hex_files");
+
+                if(hexFileSettings.find("list") != hexFileSettings.end())
+                {
+                    std::vector<std::string> localFilesList = toml::get<std::vector<std::string>>(hexFileSettings.at("list"));
+                    for(std::string& entry : localFilesList)
+                    {
+                        localFileBox_->AppendEntry(entry);
+                    }
+                }
+
+                if(hexFileSettings.find("active") != hexFileSettings.end())
+                {
+                    std::string activeEntry = toml::get<std::string>(hexFileSettings.at("active"));
+                    localFileBox_->AddActiveEntry(activeEntry);
+                }
             }
 
-            std::string activeEntry = toml::get<std::string>(hexFileSettings.at("active"));
-            localFileBox_->AddActiveEntry(activeEntry);
-
-            const toml::table& targetSettings = toml::find<toml::table>(config, "target");
-            std::string mcu = toml::get<std::string>(targetSettings.at("mcu"));
-            mcuListComboBox_->SetActiveTextEntry(mcu);
+            if(config.contains("target"))
+            {
+                const toml::table& targetSettings = toml::find<toml::table>(config, "target");
+                if(targetSettings.find("mcu") != targetSettings.end())
+                {
+                    std::string mcu = toml::get<std::string>(targetSettings.at("mcu"));
+                    mcuListComboBox_->SetActiveTextEntry(mcu);
+                }
+            }
         }
     }
 
@@ -48,7 +63,6 @@ namespace qmk
 
         if(!hexFileList.empty())
         {
-
             toml::array listEntries;
             for(std::vector<std::string>::const_iterator listIt = hexFileList.begin() + 1;
                 listIt != hexFileList.end(); 
