@@ -280,20 +280,29 @@
           </packing>
         </child>
         <child>
-          <object class="GtkTextView" id="output">
-            <property name="height_request">400</property>
+          <object class="GtkScrolledWindow">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="margin_left">10</property>
-            <property name="margin_right">10</property>
-            <property name="margin_top">5</property>
-            <property name="margin_bottom">5</property>
-            <property name="editable">False</property>
-            <property name="left_margin">10</property>
-            <property name="right_margin">10</property>
-            <property name="top_margin">10</property>
-            <property name="bottom_margin">10</property>
-            <property name="cursor_visible">False</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkTextView" id="output">
+                <property name="height_request">400</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
+                <property name="editable">False</property>
+                <property name="left_margin">10</property>
+                <property name="right_margin">10</property>
+                <property name="top_margin">10</property>
+                <property name="bottom_margin">10</property>
+                <property name="cursor_visible">False</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>

@@ -130,6 +130,9 @@ namespace qmk
             buffer->insert_with_tag(buffer->end(), text, color);
             
             messageQueue_.pop();
+
+            Glib::RefPtr<Gtk::TextBuffer::Mark> endMark = buffer->create_mark(buffer->end());
+            scroll_to(endMark);
         }
     }
 
