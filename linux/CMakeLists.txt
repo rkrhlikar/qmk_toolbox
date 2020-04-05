@@ -17,7 +17,7 @@ configure_file(binaries/avrdude bin/avrdude COPYONLY)
 configure_file(../common/avrdude.conf config/avrdude.conf COPYONLY)
 
 # Copy dfu-programmer to binary directory
-configure_file(binaries/dfu-programmer bin/programmer COPYONLY)
+configure_file(binaries/dfu-programmer bin/dfu-programmer COPYONLY)
 
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
